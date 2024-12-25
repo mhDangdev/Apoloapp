@@ -2,7 +2,7 @@ import math
 from flask import render_template, request, redirect, session, jsonify
 import dao, utils
 from app import app, login
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, current_user
 from app.models import UserRole, User, RoomRental
 
 
@@ -28,9 +28,9 @@ def reception_room():
     rooms = dao.load_rooms(status=status, page=int(page))
     page_size = app.config.get('PAGE_SIZE', 8)
     total = dao.count_rooms(status)
-
+    roomtype_regulation = dao.load_roomtype_regulation()
     return render_template('reception/reception_room.html', rooms=rooms,
-                           cr_rental=cr_rental,
+                           cr_rental=cr_rental,roomtype_regulation=roomtype_regulation,
                            pages=math.ceil(total/page_size))
 
 @app.route('/reception')
@@ -55,7 +55,7 @@ def login_process():
         u = dao.auth_user(username=username, password=password)
         if u:
             login_user(u)
-            if u.user_role == UserRole.RECEPTION:
+            if u.role == UserRole.RECEPTION:
                 return redirect('/reception')
             return redirect('/')
     return render_template('login.html')
@@ -130,10 +130,10 @@ def reception_rental():
                 else:
                     err_msg = 'VUI LÒNG ĐIỀN ĐẦY ĐỦ THÔNG TIN!'
             if not err_msg :
-                r = dao.add_room_rental(checkin_date=checkin_date, checkout_date=checkout_date, room_id=room_id)
+                r = dao.add_roomrental(checkin_date=checkin_date, checkout_date=checkout_date, room_id=room_id)
                 dao.update_room_status(room_id, 'đã được thuê')
                 for guest in guests:
-                    dao.add_customer_room_rental(customer_id=dao.get_user_id_by_cmnd(guest['cmnd']), room_rental_id=r.id)
+                    dao.add_customer_roomrental(customer_id=dao.get_user_id_by_cmnd(guest['cmnd']), room_rental_id=r.id)
                 return redirect('/reception')
     return render_template('reception/reception_rental.html',
                            room_id=room_id, room_name=room_name, err_msg=err_msg)

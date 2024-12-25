@@ -2,6 +2,8 @@ from app.models import *
 from app import app, db
 import hashlib
 import cloudinary.uploader
+from flask_login import current_user
+
 
 
 def load_categories():
@@ -57,9 +59,9 @@ def count_rooms(status=None):
 
 def load_customers(criteria=None, kw=None):
     if criteria == 'reservation':
-        query = Reservation.query.join(reservation_customer).join(Customer)
+        query = Reservation.query.join(ReservationCustomer).join(Customer)
     elif criteria == 'room_rental':
-        query = RoomRental.query.join(customer_room_rental).join(Customer)
+        query = RoomRental.query.join(CustomerRoomRental).join(Customer)
     # elif criteria == 'receipt':
     #     query = receipt.query
     if kw:
@@ -112,20 +114,29 @@ def add_user(name, username, password, avatar=None):
 
     db.session.add(u)
     db.session.commit()
-def add_room_rental(checkin_date, checkout_date, room_id):
-    room_rental = RoomRental(checkin_date=checkin_date, checkout_date=checkout_date, room_id=room_id)
-    db.session.add(room_rental)
+
+def add_roomrental(checkin_date, checkout_date, room_id, deposit=None):
+    if not deposit:
+        deposit=0
+    roomrental = RoomRental(receptionist_id=current_user.id, checkin_date=checkin_date, checkout_date=checkout_date
+                            , room_id=room_id, deposit=deposit)
+    db.session.add(roomrental)
     db.session.commit()
-    return room_rental
+    return roomrental
+
 def add_customer(name, customer_type, cmnd, address):
     customer = Customer(name=name, customer_type=customer_type, cmnd=cmnd, address=address)
     db.session.add(customer)
     db.session.commit()
     return customer
-def add_customer_room_rental(customer_id, room_rental_id):
-    query = customer_room_rental.insert().values(customer_id=customer_id, room_rental_id=room_rental_id)
+def add_customer_roomrental(customer_id, room_rental_id):
+    query = CustomerRoomRental.insert().values(customer_id=customer_id, room_rental_id=room_rental_id)
     db.session.execute(query)
     db.session.commit()
-
+def get_price(roomtype_id):
+    u = RoomTypeRegulation.query.filter_by(RoomTypeRegulation.room_type_id==(roomtype_id)).first()
+    return u.price
+def load_roomtype_regulation():
+    return  RoomTypeRegulation.query.all()
 if __name__ == '__main__':
     print()

@@ -68,10 +68,17 @@
                 <img class="card-img-top" src="{{ r.image }}" alt="{{ r.name }}">
                 <div class="card-body">
                     <h4 class="card-title">{{ r.name }}</h4>
-                    <p class="card-text">Trạng thái: {{ r.status }}</p>
+                    <p class="card-text mb-0">Trạng thái: {{ r.status }}</p>
+                    <p class="card-text mb-0">Loại phòng: {{ r.room_type.name }}</p>
+                    <p class="card-text">Giá phòng: {{ r.room_type.room_type_regulations.price }}</p>
+
                     <a href="#" class="btn btn-primary">Xem chi tiết</a>
                     {% if r.status == 'còn trống' %}
-                    <a href="/reception_rental?room_id={{ r.id }}&room_name={{ r.name }}" class="btn btn-danger">Lập phiếu</a>
+                    <a href="/reception_rental?room_id={{ r.id }}&room_name={{ r.name }}" class="btn btn-danger">Lập
+                        phiếu</a>
+                    {% else %}
+                    <a href="/reception_rental?room_id={{ r.id }}&room_name={{ r.name }}" class="btn btn-danger">Thanh
+                        toán</a>
                     {% endif %}
                 </div>
             </div>
